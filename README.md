@@ -1,16 +1,5 @@
 # Ex4_Graphs-IN-Python
 
-## Main goal of the Project
-
-In this assignment we asked to build a graph from zero, but in this time, in Python.
-The main goal of this project is a good and deep understanding of the graph's world, and deal with a code skelaton by yourself,
-thankes to this assigment we improved our coding skills and started to really understand what is to "think outside of a box".
-Another goal of this project is to create comperation between the same assigment but in different languges, in our case, Java and Python.
-At first it was a little bit confusing how different the implementation between this two.
-For example, when we coded in java we had to think about every little detail like in which data structure is the best to use in, how to get the specific value from a specific
-position, it was a little bit discouraging, until we started doing the but i python.
-In python , for our opinion, it was much more easy, the dict struct is very helpful and comfortable for use.
-
 In this assigment we implement classes such as Graph and graph algorithms such as:  
 * Center
 * TSP
