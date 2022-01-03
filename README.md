@@ -1,5 +1,4 @@
 # Ex4_Graphs-IN-Python
-* Written by Guy Azoulay and Yahalom Chasid.
 
 ## Main goal of the Project
 
