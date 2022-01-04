@@ -1,4 +1,4 @@
-# Ex4_Graphs-IN-Python
+# Directed weighted graph implemantation python.
 
 In this assigment we implement classes such as Graph and graph algorithms such as:  
 * Center
