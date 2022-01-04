@@ -52,8 +52,11 @@ class DiGraph(GraphInterface):
 
     def add_node(self, node_id: int, pos: tuple = None) -> bool: #v
         node = Node(node_id, pos)
+        if pos:
+            node.pos = tuple((float(n) for n in node.pos.split(',')))
         if node_id in self.nodes.keys(): return False
         self.nodes[node_id] = node
+        # self.nodes[node.id].pos = tuple((float(n) for n in node['pos'].split(',')))
         self.mc += 1
         return True
 

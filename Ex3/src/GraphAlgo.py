@@ -1,4 +1,7 @@
+import math
 import sys
+import tkinter
+from tkinter import simpledialog
 from typing import List
 import json
 
@@ -12,6 +15,18 @@ from queue import PriorityQueue
 import matplotlib.pyplot as plt
 import matplotlib.widgets as wgt
 import numpy as np
+import pygame
+from pygame import Color, display, gfxdraw, font
+from pygame.constants import RESIZABLE
+
+def scale(data, min_screen, max_screen, min_data, max_data):
+    return int(((data - min_data) / (max_data - min_data)) * (max_screen - min_screen) + min_screen)
+def draw_arrow(color, start, end,screen):
+    rotation = math.degrees(math.atan2(start[1] - end[1], end[0] - start[0])) + 90
+    pygame.draw.polygon(screen, color, (
+        (end[0] + 10 * math.sin(math.radians(rotation)), end[1] + 10 * math.cos(math.radians(rotation))),
+        (end[0] + 10 * math.sin(math.radians(rotation - 120)), end[1] + 10 * math.cos(math.radians(rotation - 120))),
+        (end[0] + 10 * math.sin(math.radians(rotation + 120)), end[1] + 10 * math.cos(math.radians(rotation + 120)))))
 
 
 class GraphAlgo(GraphAlgoInterface):
@@ -115,6 +130,7 @@ class GraphAlgo(GraphAlgoInterface):
                 newAllContains.append(list)
         result = newAllContains[0]
         for list in newAllContains:
+            something = self.checkWeightOfPath(list)
             if (self.checkWeightOfPath(list) <= self.checkWeightOfPath(result)):
                 result = list
 
@@ -141,48 +157,133 @@ class GraphAlgo(GraphAlgoInterface):
         return result #v
 
     def plot_graph(self) -> None:
+        WIDTH , HEIGHT = 1080 , 720
+        pygame.init()
+        screen = display.set_mode((WIDTH , HEIGHT) , depth=32 , flags= RESIZABLE)
+        clock = pygame.time.Clock()
+        pygame.font.init()
+        FONT = pygame.font.SysFont('Arial' , 20 , bold=True)
+        min_x = sys.maxsize
+        min_y = sys.maxsize
+        max_x = 0
+        max_y = 0
+        for node in self.g.nodes.values():
+            if (min_x > node.pos[0]): min_x = node.pos[0]
+            if (min_y > node.pos[1]): min_y = node.pos[1]
+            if (max_x < node.pos[0]): max_x = node.pos[0]
+            if (max_y < node.pos[1]): max_y = node.pos[1]
 
-        nodes = self.g.nodes
-        edges = self.g.edges
-        ids, x, y = [], [], []
-        # z=[]
-        for v in nodes.values():
-            ids.append(v.id)
-            vPos = v.pos.split(',')
-            x.append(float(vPos[0]))
-            y.append(-float(vPos[1]))
-            # z.append(v[2])
+        running = True
+        isCenter =[]
+        tsp =[]
 
-        fig, ax = plt.subplots()
-        plt.subplots_adjust(bottom=0.2)
+        while running:
+            click = False
+            screen.fill(Color(0 , 0 ,0))
+            scaled_x ={}
+            scaled_y ={}
+            for node in self.g.nodes.values():
+                x = scale(node.pos[0] , 50 , screen.get_width() - 50 , min_x , max_x)
+                y = scale(node.pos[1] , 50 , screen.get_height() - 50 , min_y , max_y)
+                scaled_x[node.id] = x
+                scaled_y[node.id] = y
+                gfxdraw.filled_circle(screen , x , y , 10 , Color(0,0,255))
+                gfxdraw.aacircle(screen ,x , y , 10 , Color(255,255,255))
+                if isCenter == node.id:
+                    gfxdraw.filled_circle(screen ,x , y , 10 , Color(255, 0, 0))
+                if len(tsp) != 0 and id in tsp:
+                    gfxdraw.filled_circle(screen , x ,y , 10 , Color(0,255,0))
+                id_srf = FONT.render(str(node.id) , True , pygame.Color(255,255,255))
+                rect = id_srf.get_rect(center=(x,y))
+                screen.blit(id_srf , rect)
 
-        ax.scatter(x, y, c='r')
+            for e in self.g.edges.keys():
+                src_x = scale(self.g.nodes[e[0]].pos[0] , 50 , screen.get_width() -50 , min_x ,max_x)
+                src_y = scale(self.g.nodes[e[0]].pos[1] , 50 , screen.get_height() -50 , min_y ,max_y)
+                dest_x = scale(self.g.nodes[e[1]].pos[0] , 50 , screen.get_width() -50 , min_x ,max_x)
+                dest_y = scale(self.g.nodes[e[1]].pos[1] , 50 , screen.get_height() -50 , min_y ,max_y)
+                pygame.draw.line(screen, Color(61, 72, 126), (src_x, src_y), (dest_x, dest_y), width=1)
+                draw_arrow("white", [src_x, src_y], [(src_x + dest_x) / 2, (src_y + dest_y) / 2], screen)
 
-        for i, txt in enumerate(ids):
-            ax.annotate(txt, (x[i], y[i]))
+            for i in range(len(tsp) - 1):
+                src_x = scale(self.g.nodes[tsp[i]].pos[0], 50, screen.get_width() - 50, min_x, max_x)
+                src_y = scale(self.g.nodes[tsp[i]].pos[1], 50, screen.get_height() - 50, min_y, max_y)
+                dest_x = scale(self.g.nodes[tsp[i + 1]].pos[0], 50, screen.get_width() - 50, min_x, max_x)
+                dest_y = scale(self.g.nodes[tsp[i + 1]].pos[1], 50, screen.get_height() - 50, min_y, max_y)
+                pygame.draw.line(screen, Color(255, 0, 0),
+                                 (src_x, src_y), (dest_x, dest_y), width=2)
+                draw_arrow("red", [src_x, src_y], [(src_x + dest_x) / 2, (src_y + dest_y) / 2], screen)
 
-        # for src, dest in edges.keys():
-        #     _x, _y, _ = nodes[src].pos.split(',')
-        #     _x = float(_x)
-        #     _y = float(_y)
-        #     _ = float(_)
-        #     listSrc = [_x,_y,_]
-        #     _t , _p , _q = nodes[dest].pos.split(',')
-        #     _t = float(_t)
-        #     _p = float(_p)
-        #     _q = float(_q)
-        #     listDest = [_t , _p , _q]
-        #     _dx, _dy, _ = np.array(listDest) - np.array(listSrc)
-        #     r = 0.2
-        #     x, y = _x + r * _dx, _y + r * _dy
-        #     dx, dy = (1 - r) * _dx, (1 - r) * _dy
-        #
-        #     plt.arrow(x, y, dx, dy, width=5e-5, length_includes_head=True)
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    running = False
+                elif event.type == pygame.MOUSEBUTTONUP:
+                    click = True
+                    print(pygame.mouse.get_pos())
+                    for i in range(len(scaled_y)):
+                        if (scaled_y[i] + 10 > pygame.mouse.get_pos()[1] > scaled_y[i] - 10) and \
+                                (scaled_x[i] + 10 > pygame.mouse.get_pos()[0] > scaled_x[i] - 10):
+                            print()
 
-        def prnt(self):
-            plt.plot([0, 1], [0, 1])
+            button1 = pygame.Rect(0, 0, 60, 45)
+            pygame.draw.rect(screen, (0, 0, 255), button1, border_radius=10)
+            font1 = pygame.font.SysFont("Gutman", 20)
+            screen.blit((font1.render('Center', True, (255, 255, 255))), (10, 15))
+            button2 = pygame.Rect(65, 0, 60, 45)
+            pygame.draw.rect(screen, (0, 0, 255), button2, border_radius=10)
+            screen.blit((font1.render('TSP', True, (255, 255, 255))), (75, 15))
+            button3 = pygame.Rect(130, 0, 60, 45)
+            pygame.draw.rect(screen, (0, 0, 255), button3, border_radius=10)
+            screen.blit((font1.render('Shortest Path', True, (255, 255, 255))), (140, 15))
+            button4 = pygame.Rect(195, 0, 60, 45)
+            pygame.draw.rect(screen, (0, 0, 255), button4, border_radius=10)
+            screen.blit((font1.render('Refresh', True, (255, 255, 255))), (205, 15))
+            button5 = pygame.Rect(260, 0, 60, 45)
+            pygame.draw.rect(screen , (0,0,255) , button5 , border_radius=10)
+            screen.blit((font1.render('Load' , True , (255 ,255 ,255))) , (270,15))
 
-        plt.show()
+            if click:
+                pos = pygame.mouse.get_pos()
+                if button1.collidepoint(pos):
+                    center = self.centerPoint()
+                    isCenter = center[0]
+                elif button2.collidepoint(pos):
+                    ROOT = tkinter.Tk()
+                    ROOT.withdraw()
+                    cities = simpledialog.askstring(title="TSP",
+                                                    prompt="Enter city Id's and space between each city")
+                    cities = cities.split()
+                    for i in range(len(cities)):
+                        cities[i] = int(cities[i])
+                    tsp = self.TSP(cities)
+                    tkinter.messagebox.showinfo("Length Of Path", tsp[1])
+                    tsp = tsp[0]
+                elif button3.collidepoint(pos):
+                    ROOT = tkinter.Tk()
+                    ROOT.withdraw()
+                    src = simpledialog.askstring(title="Shortest Path",
+                                                 prompt="Source")
+                    dest = simpledialog.askstring(title="Shortest Path",
+                                                  prompt=["Destination"])
+                    tsp = self.shortest_path(int(src), int(dest))
+                    print(tsp)
+                    tkinter.messagebox.showinfo("Length Of Path", tsp[0])
+                    tsp = tsp[1]
+                elif button4.collidepoint(pos):
+                    isCenter = []
+                    tsp = []
+                elif button5.collidepoint(pos):
+                    ROOT = tkinter.Tk()
+                    ROOT.withdraw()
+                    isCenter =[]
+                    tsp = []
+                    self.g.nodes ={}
+                    self.g.edges ={}
+                    graph = simpledialog.askstring(title="Load" , prompt=["Choose graph"])
+                    graph += ".json"
+                    self.load_from_json(graph)
+            display.update()
+            clock.tick(60)
 
     def DjikstraHelper(self, id1):
         if id1 not in self.g.nodes: return float('inf'),[]
@@ -210,8 +311,7 @@ class GraphAlgo(GraphAlgoInterface):
 
     def checkWeightOfPath(self , list): #Check the return value !!!
         result = 0
-        for i in range(len(list)):
-            edge = self.g.getEdges().get((i,i+1)).getWeight()
+        for i in range(len(list)-1):
+            edge = self.g.getEdges().get((list[i] , list[i+1])).getWeight()
             result += edge
-        result-=1
         return result
