@@ -4,7 +4,7 @@ In this assigment we implement classes such as Graph and graph algorithms such a
 * Center
 * TSP
 * Dijkstra
-* And a GUI interface of graph drawing using MatPlotLib
+* And a GUI interface of graph drawing using Pygame
 
 
 ## Explanation about the Class:
