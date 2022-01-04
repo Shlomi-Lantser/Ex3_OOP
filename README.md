@@ -5,9 +5,6 @@ In this assigment we implement classes such as Graph and graph algorithms such a
 * TSP
 * Dijkstra
 * And a GUI interface of graph drawing using Pygame
-
-
-## Explanation about the Class:
  
  ## The Directed Weighted Graph class
 The main purpose of this class is to demonstarte how a graph is really look like.
